@@ -740,7 +740,7 @@ def closest_point_iter(func, params,
     new_batch_lower = batch_node_lower
     new_batch_upper = batch_node_upper
     new_batch_mid = 0.5 * (new_batch_lower + new_batch_upper)
-    new_batch_coord_mask = jnp.arange(3)[None,:] == batch_node_split_dim[:,None]
+    new_batch_coord_mask = jnp.arange(d)[None,:] == batch_node_split_dim[:,None]
     newA_lower = new_batch_lower
     newA_upper = jnp.where(new_batch_coord_mask, new_batch_mid, new_batch_upper)
     newB_lower = jnp.where(new_batch_coord_mask, new_batch_mid, new_batch_lower)
@@ -771,7 +771,7 @@ def closest_point(func, params, lower, upper, query_points, eps=0.001, batch_pro
     work_node_upper = jnp.repeat(upper[None,:], Q, axis=0)
     work_query_id = jnp.arange(Q)
     query_min_dist = jnp.full((Q,), float('inf'))
-    query_min_loc = jnp.full((Q,3), -777.)
+    query_min_loc = jnp.full((Q,query_points.shape[-1]), -777.)
     work_stack_top = query_points.shape[0]
     
     i_round = 0
