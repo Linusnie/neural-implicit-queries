@@ -5,7 +5,7 @@ import numpy as np
 import jax
 import jax.numpy as jnp
 
-import utils
+from spelunking import utils
 
 # "enums" integer codes denoting the sign of the implicit function with a region
 SIGN_UNKNOWN = 0    # could be anything

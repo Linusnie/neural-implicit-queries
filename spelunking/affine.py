@@ -7,10 +7,10 @@ import numpy as np
 import jax
 import jax.numpy as jnp
 
-import utils
+from spelunking import utils
 
-import implicit_function
-from implicit_function import SIGN_UNKNOWN, SIGN_POSITIVE, SIGN_NEGATIVE
+from spelunking import implicit_function
+from spelunking.implicit_function import SIGN_UNKNOWN, SIGN_POSITIVE, SIGN_NEGATIVE
 
 # === Function wrappers
 

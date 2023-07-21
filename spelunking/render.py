@@ -8,10 +8,8 @@ import numpy as np
 from functools import partial
 import imageio
 
-import geometry
-import queries
-from utils import *
-import affine
+from spelunking import geometry, queries
+from spelunking.utils import *
 
 # theta_x/y should be 
 def camera_ray(look_dir, up_dir, left_dir, fov_deg_x, fov_deg_y, theta_x, theta_y):

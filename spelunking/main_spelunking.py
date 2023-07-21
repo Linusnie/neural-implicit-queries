@@ -17,18 +17,10 @@ import polyscope as ps
 import polyscope.imgui as psim
 
 # Imports from this project
-import render, geometry, queries
-from geometry import *
-from utils import *
-import affine
-import slope_interval
-import sdf
-import mlp
-from kd_tree import *
-from implicit_function import SIGN_UNKNOWN, SIGN_POSITIVE, SIGN_NEGATIVE
-import implicit_mlp_utils, extract_cell
-import affine_layers
-import slope_interval_layers
+from spelunking import render, queries, implicit_mlp_utils
+from spelunking.geometry import *
+from spelunking.utils import *
+from spelunking.kd_tree import *
 
 # Config
 

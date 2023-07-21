@@ -6,7 +6,7 @@ import math
 
 import numpy as np
 
-import utils
+from spelunking import utils
 
 # The raw table of all 256 cases (from http://www.paulbourke.net/geometry/polygonise/)
 MC_TRI_TABLE_RAW = [

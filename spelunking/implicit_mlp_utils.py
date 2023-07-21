@@ -5,8 +5,8 @@ import numpy as np
 import jax
 import jax.numpy as jnp
 
-import utils
-import mlp, sdf, affine, slope_interval
+from spelunking import utils
+from spelunking import mlp, sdf, affine, slope_interval
 
 
 def generate_implicit_from_file(input_path, mode, **kwargs):

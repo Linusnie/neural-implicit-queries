@@ -4,9 +4,7 @@ import jax
 import jax.numpy as jnp
 from jax import lax
 
-import slope_interval
-import mlp
-import utils
+from spelunking import slope_interval, mlp, utils
 
 def dense(input, A, b):
     if(slope_interval.is_const(input)):

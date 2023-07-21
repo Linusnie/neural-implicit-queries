@@ -10,12 +10,8 @@ import jax.numpy as jnp
 from jax.example_libraries import optimizers
 
 # Imports from this project
-from utils import *
-import mlp
-import geometry
-import render
-import queries
-import affine
+from spelunking.utils import *
+from spelunking import mlp, geometry, render, queries, affine
 
 SRC_DIR = os.path.dirname(os.path.realpath(__file__))
 ROOT_DIR = os.path.join(SRC_DIR, "..")

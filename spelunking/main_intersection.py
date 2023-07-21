@@ -13,19 +13,10 @@ import polyscope.imgui as psim
 
 
 # Imports from this project
-import render, geometry, queries
-from geometry import *
-from utils import *
-import affine
-import slope_interval
-import sdf
-import mlp
-import kd_tree 
-from implicit_function import SIGN_UNKNOWN, SIGN_POSITIVE, SIGN_NEGATIVE
-
-import affine_layers
-import slope_interval_layers
-import implicit_mlp_utils
+from spelunking import render, queries, mlp, kd_tree, implicit_mlp_utils
+from spelunking.geometry import *
+from spelunking.utils import *
+from spelunking.implicit_function import SIGN_UNKNOWN, SIGN_POSITIVE, SIGN_NEGATIVE
 
 # Config
 # from jax.config import config 

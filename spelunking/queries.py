@@ -8,12 +8,9 @@ from functools import partial
 import numpy as np
 import matplotlib.pyplot as plt
 
-import utils
-import render
-import geometry
-from bucketing import *
-import implicit_function
-from implicit_function import SIGN_UNKNOWN, SIGN_POSITIVE, SIGN_NEGATIVE
+from spelunking import utils, render, geometry
+from spelunking.bucketing import *
+from spelunking.implicit_function import SIGN_UNKNOWN, SIGN_POSITIVE, SIGN_NEGATIVE
 
 
 # =============================================================

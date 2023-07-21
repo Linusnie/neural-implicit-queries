@@ -5,9 +5,7 @@ import jax
 import jax.numpy as jnp
 
 # Imports from this project
-from utils import *
-import affine
-import slope_interval
+from spelunking.utils import *
 
 # ===== High-level flow
 
@@ -347,5 +345,4 @@ def default_spatial_transformation(input, R, t):
 apply_func['default']['spatial_transformation'] = default_spatial_transformation
 
 # TODO bad software design, see note above
-import affine_layers
-import slope_interval_layers
+from spelunking import affine_layers, slope_interval_layers

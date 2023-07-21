@@ -4,9 +4,9 @@ import jax
 import jax.numpy as jnp
 from jax import lax
 
-import affine
-import mlp
-import utils
+from spelunking import affine
+from spelunking import mlp
+from spelunking import utils
 
 def dense(input, A, b, ctx):
     if(affine.is_const(input)):

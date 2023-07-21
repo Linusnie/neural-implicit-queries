@@ -6,12 +6,10 @@ import math
 
 import numpy as np
 
-import utils
-from bucketing import *
-import implicit_function
-from implicit_function import SIGN_UNKNOWN, SIGN_POSITIVE, SIGN_NEGATIVE
-import extract_cell
-import geometry
+from spelunking import utils, extract_cell, geometry
+from spelunking.bucketing import *
+from spelunking import implicit_function
+from spelunking.implicit_function import SIGN_UNKNOWN, SIGN_POSITIVE, SIGN_NEGATIVE
 
 INVALID_IND = 2**30
 
