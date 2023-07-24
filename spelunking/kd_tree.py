@@ -1,6 +1,7 @@
 import jax
 import jax.numpy as jnp
 
+from dataclasses import dataclass
 from functools import partial
 import math
 
@@ -713,9 +714,9 @@ def closest_point_iter(func, params,
         this_closest_point_dist = jnp.where(spans_surface, max_dist_to_point_in_node, float('inf'))
         needs_subdiv = utils.logical_and_all((valid, ~is_outside, ~is_small, min_dist_to_point_in_node < query_min_dist))
 
-        return needs_subdiv, this_closest_point_dist, node_center, node_split_dim
+        return needs_subdiv, this_closest_point_dist, node_center, node_split_dim, node_interval_type
 
-    batch_needs_subdiv, batch_this_closest_point_dist, batch_node_center, batch_node_split_dim = \
+    batch_needs_subdiv, batch_this_closest_point_dist, batch_node_center, batch_node_split_dim, batch_interval_type = \
         jax.vmap(process_one)(batch_valid, batch_query_id, batch_node_lower, batch_node_upper, batch_query_loc, batch_query_min_dist)
 
 
@@ -758,10 +759,17 @@ def closest_point_iter(func, params,
     work_stack_top = work_stack_top + 2*N_new 
 
     return query_min_dist, query_min_loc, \
-            work_query_id, work_node_lower, work_node_upper, work_stack_top,
+            work_query_id, work_node_lower, work_node_upper, work_stack_top, batch_interval_type
 
+@dataclass
+class ClosestPointIter:
+    query_id: jnp.array
+    node_lower: jnp.array
+    node_upper: jnp.array
+    interval_type: jnp.array
+    min_dist: jnp.array
 
-def closest_point(func, params, lower, upper, query_points, eps=0.001, batch_process_size=2048):
+def closest_point(func, params, lower, upper, query_points, eps=0.001, batch_process_size=2048, return_iters=False):
 
 
     # working data
@@ -774,6 +782,15 @@ def closest_point(func, params, lower, upper, query_points, eps=0.001, batch_pro
     query_min_loc = jnp.full((Q,query_points.shape[-1]), -777.)
     work_stack_top = query_points.shape[0]
     
+    iterations = []
+    if return_iters:
+        iterations.append(ClosestPointIter(
+            work_query_id[:work_stack_top],
+            work_node_lower[:work_stack_top],
+            work_node_upper[:work_stack_top],
+            None,
+            query_min_dist,
+        ))
     i_round = 0
     while work_stack_top > 0:
 
@@ -787,17 +804,29 @@ def closest_point(func, params, lower, upper, query_points, eps=0.001, batch_pro
     
 
         query_min_dist, query_min_loc, \
-        work_query_id, work_node_lower, work_node_upper, work_stack_top = \
+        work_query_id, work_node_lower, work_node_upper, work_stack_top, batch_interval_type = \
             closest_point_iter(func, params, 
                 query_points, query_min_dist, query_min_loc,
                 work_query_id, work_node_lower, work_node_upper, work_stack_top, 
                 eps=eps, batch_process_size=batch_process_size)
 
         work_stack_top = int(work_stack_top)
+        if return_iters:
+            iterations[-1].interval_type = batch_interval_type[:len(iterations[-1].query_id)]
+            iterations.append(ClosestPointIter(
+                work_query_id[:work_stack_top],
+                work_node_lower[:work_stack_top],
+                work_node_upper[:work_stack_top],
+                None,
+                query_min_dist,
+            ))
 
         i_round += 1
 
-    return query_min_dist, query_min_loc
+    if return_iters:
+        return query_min_dist, query_min_loc, iterations
+    else:
+        return query_min_dist, query_min_loc
 
 @partial(jax.jit, static_argnames=("func", "n_samples",))
 def bulk_properties_sample_mass(func, params, node_valid, node_lower, node_upper, n_samples, rngkey):
