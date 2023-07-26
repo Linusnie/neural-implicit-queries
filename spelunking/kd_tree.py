@@ -768,10 +768,11 @@ class ClosestPointIter:
     node_upper: jnp.array
     interval_type: jnp.array
     min_dist: jnp.array
+    time: float
 
 def closest_point(func, params, lower, upper, query_points, eps=0.001, batch_process_size=2048, return_iters=False):
 
-
+    from time import time
     # working data
     B = batch_process_size
     Q = query_points.shape[0]
@@ -790,6 +791,7 @@ def closest_point(func, params, lower, upper, query_points, eps=0.001, batch_pro
             work_node_upper[:work_stack_top],
             None,
             query_min_dist,
+            None
         ))
     i_round = 0
     while work_stack_top > 0:
@@ -802,14 +804,14 @@ def closest_point(func, params, lower, upper, query_points, eps=0.001, batch_pro
             work_node_upper = utils.resize_array_axis(work_node_upper, N_new)
             work_query_id = utils.resize_array_axis(work_query_id, N_new)
     
-
+        t = time()
         query_min_dist, query_min_loc, \
         work_query_id, work_node_lower, work_node_upper, work_stack_top, batch_interval_type = \
             closest_point_iter(func, params, 
                 query_points, query_min_dist, query_min_loc,
                 work_query_id, work_node_lower, work_node_upper, work_stack_top, 
                 eps=eps, batch_process_size=batch_process_size)
-
+        t = time() - t
         work_stack_top = int(work_stack_top)
         if return_iters:
             iterations[-1].interval_type = batch_interval_type[:len(iterations[-1].query_id)]
@@ -819,6 +821,7 @@ def closest_point(func, params, lower, upper, query_points, eps=0.001, batch_pro
                 work_node_upper[:work_stack_top],
                 None,
                 query_min_dist,
+                t
             ))
 
         i_round += 1
