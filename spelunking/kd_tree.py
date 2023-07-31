@@ -657,7 +657,7 @@ def find_any_intersection(func_tuple, params_tuple, lower, upper, eps, viz_nodes
 # @partial(jax.jit, static_argnames=("func","batch_process_size"), donate_argnums=(3,4,5,6,7))
 @partial(jax.jit, static_argnames=("func","batch_process_size"))
 def closest_point_iter(func, params, 
-        query_points, query_min_dist, query_min_loc,
+        query_points, query_min_dist, query_min_loc, query_min_lower, query_min_upper,
         work_query_id, work_node_lower, work_node_upper, work_stack_top,
         eps, batch_process_size):
 
@@ -726,6 +726,8 @@ def closest_point_iter(func, params,
     batch_has_new_min = (batch_this_closest_point_dist == batch_query_new_min_dist)
     batch_target_inds = jnp.where(batch_has_new_min, batch_query_id, Q)
     query_min_loc = query_min_loc.at[batch_target_inds,:].set(batch_node_center, mode='drop')
+    query_min_lower = query_min_lower.at[batch_target_inds,:].set(batch_node_lower, mode='drop')
+    query_min_upper = query_min_upper.at[batch_target_inds,:].set(batch_node_upper, mode='drop')
 
     # compactify the nodes which need to be subdivided
     N_new = jnp.sum(batch_needs_subdiv) # before split, after splitting there will be 2*N_new nodes
@@ -758,7 +760,7 @@ def closest_point_iter(func, params,
     work_node_upper = jax.lax.dynamic_update_slice_in_dim(work_node_upper, new_node_upper, pop_ind, axis=0)
     work_stack_top = work_stack_top + 2*N_new 
 
-    return query_min_dist, query_min_loc, \
+    return query_min_dist, query_min_loc, query_min_lower, query_min_upper, \
             work_query_id, work_node_lower, work_node_upper, work_stack_top, batch_interval_type
 
 @dataclass
@@ -767,8 +769,13 @@ class ClosestPointIter:
     node_lower: jnp.array
     node_upper: jnp.array
     interval_type: jnp.array
-    min_dist: jnp.array
+    min_dist: jnp.array # distance to current closest point
+    min_loc: jnp.array # location of current closest point
+    min_lower: jnp.array # bounding box of current closest point
+    min_upper: jnp.array
+    # min_sample_points: jnp.array # sample points of current closest point (used to determine if there's a surface boundary)
     time: float
+    work_size: int
 
 def closest_point(func, params, lower, upper, query_points, eps=0.001, batch_process_size=2048, return_iters=False):
 
@@ -781,6 +788,8 @@ def closest_point(func, params, lower, upper, query_points, eps=0.001, batch_pro
     work_query_id = jnp.arange(Q)
     query_min_dist = jnp.full((Q,), float('inf'))
     query_min_loc = jnp.full((Q,query_points.shape[-1]), -777.)
+    query_min_lower = jnp.full((Q,query_points.shape[-1]), -777.)
+    query_min_upper = jnp.full((Q,query_points.shape[-1]), -777.)
     work_stack_top = query_points.shape[0]
     
     iterations = []
@@ -791,7 +800,11 @@ def closest_point(func, params, lower, upper, query_points, eps=0.001, batch_pro
             work_node_upper[:work_stack_top],
             None,
             query_min_dist,
-            None
+            query_min_loc,
+            query_min_lower,
+            query_min_upper,
+            None,
+            Q,
         ))
     i_round = 0
     while work_stack_top > 0:
@@ -805,10 +818,10 @@ def closest_point(func, params, lower, upper, query_points, eps=0.001, batch_pro
             work_query_id = utils.resize_array_axis(work_query_id, N_new)
     
         t = time()
-        query_min_dist, query_min_loc, \
+        query_min_dist, query_min_loc, query_min_lower, query_min_upper, \
         work_query_id, work_node_lower, work_node_upper, work_stack_top, batch_interval_type = \
             closest_point_iter(func, params, 
-                query_points, query_min_dist, query_min_loc,
+                query_points, query_min_dist, query_min_loc, query_min_lower, query_min_upper,
                 work_query_id, work_node_lower, work_node_upper, work_stack_top, 
                 eps=eps, batch_process_size=batch_process_size)
         t = time() - t
@@ -821,7 +834,11 @@ def closest_point(func, params, lower, upper, query_points, eps=0.001, batch_pro
                 work_node_upper[:work_stack_top],
                 None,
                 query_min_dist,
-                t
+                query_min_loc,
+                query_min_lower,
+                query_min_upper,
+                t,
+                work_node_lower.shape[0],
             ))
 
         i_round += 1
