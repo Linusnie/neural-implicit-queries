@@ -684,8 +684,7 @@ def closest_point_iter(func, params,
     batch_valid = jnp.arange(B) < work_stack_top
     work_stack_top = pop_ind
    
-    eps_cube_width = eps / jnp.sqrt(d)
-    d = work_node_lower.shape[-1]
+    eps_cube_width = eps / jnp.sqrt(d) * 2
 
     # process each node, computing closest point data
     def process_one(valid, query_id, lower, upper, query_loc, query_min_dist):
@@ -693,14 +692,15 @@ def closest_point_iter(func, params,
         # compute an upper bound on the distance to any point in the node
         node_width = jnp.max(upper-lower)
         node_center = 0.5 * (lower + upper)
-        node_center_dist_offset = jnp.sqrt(jnp.sum(jnp.square(upper-lower))) # maximum distance from the center to any point in the node
+        node_center_dist_offset = .5 * jnp.sqrt(jnp.sum(jnp.square(upper-lower))) # maximum distance from the center to any point in the node
         max_dist_to_point_in_node = geometry.norm(query_loc - node_center) + node_center_dist_offset # could be tighter
         nearest_point_in_node = jnp.clip(query_loc, a_min=lower, a_max=upper)
-        min_dist_to_point_in_node = geometry.norm(query_loc - node_center)
+        min_dist_to_point_in_node = geometry.norm(query_loc - nearest_point_in_node)
+
         node_split_dim = jnp.argmax(upper-lower, axis=-1)
         is_small = node_width < eps_cube_width
         sample_offsets = jnp.concatenate((jnp.zeros((1,d)) ,jnp.eye(d), -jnp.eye(d)), axis=0) # [7,3]
-        sample_pts = node_center[None,:] + (upper-lower)[None,:] * sample_offsets
+        sample_pts = node_center[None,:] + .5 * (upper-lower)[None,:] * sample_offsets
 
         # classify the box
         node_interval_type = func.classify_box(params, lower, upper)
