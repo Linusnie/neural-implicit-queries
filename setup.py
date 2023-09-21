@@ -7,8 +7,8 @@ setup(
     packages=['spelunking'],
     install_requires=[
         "numpy",
-        "jax==0.4.9",
-        "jaxlib==0.4.9",
+        "jax",
+        "jaxlib",
         "polyscope",
         "imageio"
     ]
